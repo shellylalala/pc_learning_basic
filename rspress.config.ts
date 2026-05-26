@@ -2,6 +2,7 @@ import * as path from "node:path";
 import { defineConfig } from "@rspress/core";
 
 export default defineConfig({
+  base: "/pc_learning_basic/",
   root: path.join(__dirname, "docs"),
   title: "知积",
   icon: "/cat.png",

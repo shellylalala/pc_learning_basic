@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rspress build",
     "dev": "rspress dev",
-    "preview": "rspress preview"
+    "preview": "rspress preview",
+    "deploy": "gh-pages -d doc_build"
   },
   "dependencies": {
     "@rspress/core": "^2.0.12"
@@ -15,6 +16,7 @@
     "@types/node": "^22.8.1",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
+    "gh-pages": "^6.3.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   }
