@@ -1,16 +1,12 @@
 [
   {
-    "text": "Guide",
-    "link": "/guide/start/introduction",
-    "activeMatch": "/guide/"
+    "text": "前端基础",
+    "link": "/foundations/start/introduction",
+    "activeMatch": "/foundations/"
   },
   {
-    "text": "API",
-    "link": "/api/",
-    "activeMatch": "/api/"
-  },
-  {
-    "text": "Document",
-    "link": "https://rspress.rs/"
+    "text": "计算机基础",
+    "link": "/computer-science/start/introduction",
+    "activeMatch": "/computer-science/"
   }
 ]
