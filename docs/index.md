@@ -24,6 +24,7 @@ features:
   - title: 计算机基础
     details: 夯实软件工程内功，建立真正的技术认知体系
     icon: 🧠
+    link: /computer-science/start/introduction
 
   - title: 算法与数据结构
     details: 训练逻辑思维，让代码拥有更高的效率与质量
