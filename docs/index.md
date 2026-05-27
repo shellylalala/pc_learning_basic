@@ -2,8 +2,8 @@
 pageType: home
 
 hero:
-  name: 计算机学习扫盲知识积累
-  text: 用于学习整理学习计算机的相关内容
+  name: 赛博藏经阁
+  text: 堆放一堆的有的没的前端学习过程知识
   tagline: 学而不思则罔，思而不学则殆
   actions:
     - theme: brand
@@ -11,33 +11,33 @@ hero:
       link: /guide/start/introduction
     - theme: alt
       text: GitHub
-      link: https://github.com/web-infra-dev/rspress
+      link: https://github.com/shellylalala/pc_learning_basic
   image:
-    src: /dog2.png
+    src: /robot.png
     alt: Logo
 features:
-  - title: Blazing fast build speed
-    details: The core compilation module is based on the Rust front-end toolchain, providing a more ultimate development experience.
-    icon: 🏃🏻‍♀️
-    link: /guide/start/introduction
-  - title: Support for MDX content writing
-    details: MDX is a powerful way to write content, allowing you to use React components in Markdown.
-    icon: 📦
-    link: /guide/use-mdx/components
-  - title: Built-in full-text search
-    details: Automatically generates a full-text search index for you during construction, providing out-of-the-box full-text search capabilities.
-    icon: 🎨
-    link: https://rspress.rs/guide/advanced/custom-search
-  - title: AI-friendly
-    details: Generate llms.txt and Markdown files compliant with the llms.txt specification through SSG-MD, making it easier for large language models to understand and use your documentation.
+  - title: 前端基础
+    details: 从页面到交互，理解 Web 世界最底层的运行方式
+    icon: 🌱
+    link: /foundations/start/introduction
+
+  - title: 计算机基础
+    details: 夯实软件工程内功，建立真正的技术认知体系
+    icon: 🧠
+
+  - title: 算法与数据结构
+    details: 训练逻辑思维，让代码拥有更高的效率与质量
+    icon: 🧩
+
+  - title: React 与框架
+    details: 学习现代框架思想，构建复杂而优雅的应用系统
+    icon: ⚛️
+
+  - title: 工程化
+    details: 从开发到部署，掌握大型项目背后的工程体系
+    icon: 🛠️
+
+  - title: AI 与未来
+    details: 与 AI 协作开发，探索下一代软件工程的可能性
     icon: 🤖
-    link: https://rspress.rs/guide/basic/ssg-md
-  - title: Static site generation
-    details: In production, it automatically builds into static HTML files, which can be easily deployed anywhere.
-    icon: 🌈
-    link: https://rspress.rs/guide/basic/ssg
-  - title: Providing multiple custom capabilities
-    details: Through its extension mechanism, you can easily extend theme UI and build process.
-    icon: 🔥
-    link: https://rspress.rs/guide/basic/custom-theme
 ---
