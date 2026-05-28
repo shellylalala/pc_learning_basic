@@ -1,0 +1,5 @@
+import { initializeDashboard } from "./dashboardFacade";
+
+export function FacadePatternDemo() {
+  return <div>...</div>;
+}

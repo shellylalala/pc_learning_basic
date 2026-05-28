@@ -1,0 +1,226 @@
+import { Tabs, Tab } from "@rspress/core/theme";
+import { FacadePatternDemo } from "../../../theme/components/FacadePatternDemo";
+
+# 外观模式
+
+> 面向 React + TypeScript 初中级开发者：外观模式最重要的价值，不是“再包一层”，而是把复杂子系统的调用顺序和协作细节收口成一个稳定入口，让页面和组件不必直接协调一堆服务。
+
+<FacadePatternDemo />
+
+## 1. 设计模式概念
+
+外观模式解决的是“底层系统很复杂，但调用方只想要一个简单入口”的问题。
+
+一句话理解：**把多个子系统的复杂调用流程，封装成一个统一、易用的门面接口。**
+
+它的核心思想不是替代底层系统，而是替调用方做复杂度隔离。真实项目里，一个页面初始化可能要同时做：
+
+- 拉用户资料
+- 拉权限配置
+- 拉实验开关
+- 拉未读消息数
+
+如果组件直接调用这些服务，它不仅要知道每个服务怎么调，还要知道先后顺序、失败兜底和数据合并方式。外观模式解决的本质问题是：**不要让调用方直接编排复杂流程，而是给它一个清晰稳定的总入口。**
+
+## 2. 为什么前端需要它
+
+React 页面最容易腐化的地方之一，就是组件既做 UI，又顺手做一堆服务编排。
+
+比如一个控制台首页初始化：
+
+- 先拿用户信息
+- 再判断权限范围
+- 再拉实验配置
+- 最后拉通知数据
+
+如果没有外观思维，最常见的写法就是在组件里连着调 4 个接口，再自己处理错误、拼接数据、判断先后依赖。时间一长，页面组件会越来越像“页面编排中心”。
+
+React 工程尤其容易掉进这个坑，因为组件里写异步逻辑门槛很低，于是很多人会把本该属于服务层的流程 orchestration 直接塞进 `useEffect` 或点击事件里。
+
+外观模式的价值就在这里：页面只调用一个 `dashboardFacade.initialize()`，至于内部怎么拆分调用、怎么兜底、怎么拼成最终视图模型，都由外观层负责。这样组件就能回到自己该做的事：状态、交互、渲染。
+
+## 3. 真实业务场景
+
+| 场景           | 为什么适合外观模式                                                                 |
+| -------------- | ---------------------------------------------------------------------------------- |
+| 页面初始化聚合 | 一个页面启动时依赖多个接口和配置，适合用统一 facade 返回最终视图模型。             |
+| 支付提交流程   | 下单、库存校验、优惠计算、支付方式准备、风控校验可以通过一个统一支付外观暴露出去。 |
+| 编辑器启动流程 | 拉文档内容、权限、协作状态、插件配置时，不应该让组件自己编排所有子系统。           |
+| 导出中心       | 导出参数检查、任务创建、轮询状态、下载文件这些步骤可以由 facade 统一包装。         |
+| BFF / SDK 封装 | 前端不想知道底层多个服务如何协作，只想拿到一个稳定接口和结构化结果。               |
+
+这些场景共同说明：**问题不只是接口多，而是接口之间存在协作顺序和组合关系。**
+
+## 4. 错误示范（非常重要）
+
+先看一个没有外观模式的控制台初始化：
+
+```tsx
+async function initializeDashboard(role: UserRole) {
+  const profile = await fetchProfile(role);
+  const permissions = await fetchPermissions(role);
+  const flags = await fetchFeatureFlags(role);
+  const unreadCount = await fetchUnreadCount(role);
+
+  return {
+    profile,
+    permissions,
+    flags,
+    unreadCount,
+  };
+}
+```
+
+如果只是这 4 行看起来还好，但真实项目里很快就会继续长：
+
+- 某些角色拉不到某个模块，要给默认值
+- 某个接口失败时要降级，不影响整体页面渲染
+- 某个接口必须等用户资料回来后才能调
+- 某些实验开关只对管理员生效
+
+最后问题不在于“接口多”，而在于组件知道了太多编排细节。等另一个页面也需要类似初始化时，你大概率会开始复制粘贴这些流程。
+
+## 5. 使用设计模式重构
+
+这次 demo 使用真实前端场景：**控制台首页初始化外观**。
+
+重构后的设计是：
+
+- `profileService`、`permissionService`、`flagService`、`messageService` 只负责各自子系统能力
+- `dashboardFacade.ts` 负责组织调用顺序和返回最终视图模型
+- React 组件只负责选择角色、调用 facade、展示结果
+- 子系统变化时，优先修改 facade 或子服务，而不是把变化扩散到页面里
+
+<Tabs>
+
+<Tab label="types.ts">
+
+```ts
+export type UserRole = "guest" | "editor" | "admin";
+
+export interface DashboardSnapshot {
+  userName: string;
+  permissions: string[];
+  featureFlags: string[];
+  unreadCount: number;
+}
+```
+
+</Tab>
+
+<Tab label="dashboardFacade.ts">
+
+```ts
+export async function initializeDashboard(
+  role: UserRole,
+): Promise<DashboardSnapshot> {
+  const profile = await fetchProfile(role);
+  const permissions = await fetchPermissions(role);
+  const featureFlags = await fetchFeatureFlags(role);
+  const unreadCount = await fetchUnreadCount(role);
+
+  return {
+    userName: profile.name,
+    permissions,
+    featureFlags,
+    unreadCount,
+  };
+}
+```
+
+</Tab>
+
+<Tab label="FacadePatternDemo.tsx">
+
+```tsx
+const snapshot = await initializeDashboard(role);
+setData(snapshot);
+```
+
+</Tab>
+
+</Tabs>
+
+这里最关键的变化是：页面不再直接和 4 个子服务打交道，而是只依赖一个稳定的 facade 入口。
+
+完整源码已经放在本章的 `code/6_facade-pattern` 目录中，页面顶部 demo 也是同一套思路的可运行实现。
+
+## 6. 流程图 / 数据流（非常重要）
+
+```text
+用户选择角色并点击“初始化控制台”
+↓
+React 组件调用 initializeDashboard(role)
+↓
+Facade 依次协调 Profile / Permission / Flag / Message 子系统
+↓
+子系统结果被统一整理成 DashboardSnapshot
+↓
+组件拿到一个稳定结构的数据对象
+↓
+控制台卡片、权限列表、实验开关、未读消息数一起更新
+```
+
+```text
+FacadePatternDemo
+  ↓
+DashboardFacade
+  ├─ ProfileService
+  ├─ PermissionService
+  ├─ FlagService
+  └─ MessageService
+  ↓
+DashboardSnapshot
+  ↓
+UI 渲染
+```
+
+外观模式真正重要的地方是：**调用方只面向门面，不面向子系统编排细节。**
+
+## 7. 优点
+
+第一，**调用入口更简单**。页面和组件只需要记住一个 facade 接口，而不是一串子服务调用顺序。
+
+第二，**复杂编排被收口**。哪些接口先调、哪些失败可降级、如何拼结果，都统一留在外观层处理。
+
+第三，**组件边界更干净**。React 组件不用再兼任“流程编排器”，可以专注在状态和展示上。
+
+第四，**更利于复用**。多个页面如果都需要类似初始化流程，可以直接复用 facade，而不是复制一堆异步逻辑。
+
+第五，**更容易演进**。以后底层某个服务改字段或增加步骤，优先改 facade，不需要把变动扩散到所有调用点。
+
+## 8. 缺点
+
+外观模式也不是越多越好。
+
+如果底层系统本来就很简单，只有一个服务或两个很直观的调用，强行再包一层 facade 只会制造间接层。
+
+另外，外观层如果承担过多职责，也会腐化：
+
+- 什么都想在 facade 里做
+- facade 越长越像“大总管”
+- 连业务判断和 UI 兜底都塞进去
+
+所以外观模式更适合**调用方确实需要一个更简单接口，而底层又存在明显复杂度**的场景。
+
+## 9. React / 常见库中的体现（重点）
+
+很多前端团队都会写 `dashboardService`、`pageInitializer`、`editorBootstrapService` 这种对象，本质上就带有很强的外观模式味道。页面不直接调很多接口，而是统一调用一个编排后的入口。
+
+在 SDK 设计里，外观模式也非常常见。比如业务方只想调用 `client.init()` 或 `client.login()`，而 SDK 内部其实协调了 token、配置、用户信息和实验开关等多个子系统。
+
+Next.js 或 BFF 场景里，前端经常会通过一个聚合层拿到页面所需全部数据，这也是典型的外观思路：不给页面暴露底层微服务编排细节。
+
+React Query 更偏服务状态管理，但很多团队会在 Query 之上再加一层 facade，把多个 query 的组合逻辑封装成一个更易用的业务入口。
+
+从 Hooks 设计角度看，自定义 Hook 也常承担 facade 角色。一个 `useDashboardBootstrap()` 内部可能已经帮你组织了多个服务调用、错误兜底和视图模型拼装。
+
+Fiber 和调度机制不会帮你管理子系统编排复杂度。React 只负责 UI 如何更新，不负责“控制台首页初始化到底要先调谁、后调谁”。这个复杂度仍然需要靠良好的服务边界来解决，而外观模式就在做这件事。
+
+## 10. 总结
+
+外观模式最核心的一句话是：**把复杂子系统藏在后面，给调用方一个稳定、简单、可理解的统一入口。**
+
+真正应该学会的，不是背出 facade 这个名字，而是当你发现组件开始自己编排越来越多服务、处理越来越多组合细节时，能意识到：这里需要一个门面层来隔离复杂度。
+
+对 React 开发者来说，外观模式最大的意义，就是让页面不必直接协调一堆系统，把复杂编排收口到服务层，让 UI 重新回到“输入状态、输出界面”的职责上。

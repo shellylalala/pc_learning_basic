@@ -1,0 +1,8 @@
+import { useState } from "react";
+import { reportServiceProxy } from "./reportService";
+
+export function ProxyPatternDemo() {
+  const [role, setRole] = useState("analyst");
+
+  return <div>...</div>;
+}

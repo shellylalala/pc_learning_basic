@@ -1,0 +1,1 @@
+export { DecoratorPatternDemo } from "./DecoratorPatternDemo";

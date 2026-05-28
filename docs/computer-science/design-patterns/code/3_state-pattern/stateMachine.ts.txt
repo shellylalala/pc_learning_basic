@@ -1,0 +1,45 @@
+import type { PublishAction, PublishState, PublishStatus, StatusConfig } from "./types";
+
+export const initialPublishState: PublishState = {
+  status: "idle",
+  title: "React 组件设计原则",
+  message: "等待开始发布",
+};
+
+export const statusConfigs: Record<PublishStatus, StatusConfig> = {
+  idle: {
+    label: "待提交",
+    buttonText: "开始发布",
+    helperText: "当前可以编辑标题并发起发布。",
+    tone: "neutral",
+    canSubmit: true,
+  },
+  validating: {
+    label: "校验中",
+    buttonText: "校验中...",
+    helperText: "系统正在检查标题是否合法。",
+    tone: "warning",
+    canSubmit: false,
+  },
+  submitting: {
+    label: "发布中",
+    buttonText: "发布中...",
+    helperText: "请求已经发出，等待服务端返回结果。",
+    tone: "warning",
+    canSubmit: false,
+  },
+  success: {
+    label: "发布成功",
+    buttonText: "再次发布",
+    helperText: "内容已经成功发布，可以继续发起新一次流程。",
+    tone: "success",
+    canSubmit: true,
+  },
+  error: {
+    label: "发布失败",
+    buttonText: "重试发布",
+    helperText: "请求失败后允许重试，但仍然保持在同一个流程模型里。",
+    tone: "danger",
+    canSubmit: true,
+  },
+};

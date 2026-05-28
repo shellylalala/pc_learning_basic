@@ -1,0 +1,10 @@
+import { useReducer } from "react";
+import { initialPublishState, publishReducer, statusConfigs } from "./stateMachine";
+import "./state-demo.css";
+
+export function StatePatternDemo() {
+  const [state, dispatch] = useReducer(publishReducer, initialPublishState);
+  const config = statusConfigs[state.status];
+
+  return <div>...</div>;
+}

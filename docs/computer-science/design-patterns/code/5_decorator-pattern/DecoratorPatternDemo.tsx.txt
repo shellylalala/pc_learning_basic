@@ -1,0 +1,5 @@
+import { composePublisher } from "./decorators";
+
+export function DecoratorPatternDemo() {
+  return <div>...</div>;
+}

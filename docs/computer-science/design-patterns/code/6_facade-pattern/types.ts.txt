@@ -1,0 +1,10 @@
+export type UserRole = "guest" | "editor" | "admin";
+
+export interface DashboardSnapshot {
+  userName: string;
+  role: UserRole;
+  permissions: string[];
+  featureFlags: string[];
+  unreadCount: number;
+  notice: string;
+}
