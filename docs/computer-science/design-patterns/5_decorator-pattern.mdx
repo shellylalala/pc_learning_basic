@@ -1,0 +1,233 @@
+import { Tabs, Tab } from "@rspress/core/theme";
+import { DecoratorPatternDemo } from "../../../theme/components/DecoratorPatternDemo";
+
+# 装饰器模式
+
+> 面向 React + TypeScript 初中级开发者：装饰器模式最重要的价值，不是语法糖，而是让你在不改核心对象的前提下，一层一层叠加能力，避免把所有增强逻辑都塞进一个大函数里。
+
+<DecoratorPatternDemo />
+
+## 1. 设计模式概念
+
+装饰器模式解决的是“在不修改原对象的前提下，动态增强它的能力”的问题。
+
+一句话理解：**核心对象先把基础能力做好，额外能力通过一层层包装叠加上去。**
+
+它的核心思想不是“多包一层函数”这么简单，而是把“基础职责”和“增强职责”拆开。真实项目里，很多功能本来是主流程之外的增强项，比如：
+
+- 发布前做校验
+- 发布前自动备份草稿
+- 发布成功后记埋点
+- 发布失败后给出统一提示
+
+如果这些逻辑都写进核心服务里，核心对象就会越来越胖。装饰器模式解决的本质问题是：**让核心能力保持稳定，把增强能力按需叠加。**
+
+## 2. 为什么前端需要它
+
+React 项目里，很多业务对象本来只该做一件事，但随着需求增长，它们周围会不断长出“顺便再做一下”的逻辑。
+
+比如一个内容发布服务，一开始只需要把文章提交给服务端。后来需求加上来了：
+
+- 发布前校验标题长度
+- 发布前自动备份草稿
+- 发布后记录埋点
+- 失败后统一弹提示
+
+如果没有装饰器思维，最常见的写法是把这些逻辑不断塞进 `publishArticle()`。很快这个函数就不再只是“发布文章”，而变成“验证 + 备份 + 发布 + 埋点 + 提示”的杂糅体。
+
+React 工程尤其容易遇到这个问题，因为组件已经要处理状态、渲染和交互；服务层如果再堆满增强逻辑，边界会越来越难看清。
+
+装饰器模式的价值就在这里：核心对象只负责“发布”，增强能力通过包装器一层层附着上去。你既能复用增强逻辑，又不用污染基础实现。
+
+## 3. 真实业务场景
+
+| 场景             | 为什么适合装饰器模式                                                 |
+| ---------------- | -------------------------------------------------------------------- |
+| API Client 增强  | 在不改核心请求函数的前提下，叠加重试、日志、鉴权头、错误提示等能力。 |
+| 表单提交增强     | 表单主流程不变，但可以按需增加校验、草稿备份、埋点、成功提示。       |
+| React 组件包装   | HOC、本地化包装、权限包装、主题包装，本质上都在给原组件叠加能力。    |
+| 富文本编辑器插件 | 基础编辑能力不变，但通过插件或包装叠加字数统计、历史记录、协作提示。 |
+| 监控与埋点       | 不改业务函数本体，通过包装器统一加耗时统计、行为上报、异常捕获。     |
+
+这些场景说明的是同一个问题：**基础能力稳定，但增强需求会越来越多，而且并不是每次都要全部启用。**
+
+## 4. 错误示范（非常重要）
+
+先看一个没有装饰器模式的内容发布函数：
+
+```tsx
+async function publishArticle(input: PublishInput) {
+  if (input.title.trim().length < 6) {
+    throw new Error("标题太短");
+  }
+
+  saveDraftBackup(input);
+  track("article_publish_clicked", { role: input.role });
+
+  const result = await requestPublish(input);
+
+  track("article_publish_success", { articleId: result.id });
+  showToast("发布成功");
+  return result;
+}
+```
+
+这段代码最大的问题不是能不能跑，而是所有增强逻辑都挤进了同一个入口：
+
+- 校验混进来了
+- 草稿备份混进来了
+- 埋点混进来了
+- Toast 混进来了
+
+以后如果某个页面不想自动备份、某个角色不需要埋点、某个环境不想弹提示，这个函数就会继续长更多分支。最后它会变成一个“什么都做一点”的大函数。
+
+## 5. 使用设计模式重构
+
+这次 demo 使用真实前端场景：**内容发布服务增强链**。
+
+重构后的分工是：
+
+- `BasePublisher` 只负责真实发布动作
+- `withValidation` 负责输入校验
+- `withDraftBackup` 负责自动备份草稿
+- `withAnalytics` 负责记录埋点日志
+- React 组件按需组合这些装饰器，再触发发布
+
+<Tabs>
+
+<Tab label="types.ts">
+
+```ts
+export interface PublishInput {
+  title: string;
+  contentLength: number;
+  hasCover: boolean;
+  role: UserRole;
+}
+
+export interface Publisher {
+  name: string;
+  publish: (input: PublishInput) => Promise<PublishResult>;
+}
+```
+
+</Tab>
+
+<Tab label="decorators.ts">
+
+```ts
+export function withValidation(
+  publisher: Publisher,
+  pushLog: PushLog,
+): Publisher {
+  return {
+    ...publisher,
+    name: `${publisher.name} + Validation`,
+    async publish(input) {
+      if (input.title.trim().length < 6) {
+        throw new Error("标题至少需要 6 个字");
+      }
+
+      return publisher.publish(input);
+    },
+  };
+}
+```
+
+</Tab>
+
+<Tab label="DecoratorPatternDemo.tsx">
+
+```tsx
+const decoratedPublisher = composePublisher(selectedDecorators, pushLog);
+const result = await decoratedPublisher.publish(input);
+```
+
+</Tab>
+
+</Tabs>
+
+这里最关键的变化是：核心发布服务没有因为增强需求越来越多而被改得面目全非，增强职责都转移到了装饰器里。
+
+完整源码已经放到本章的 `code/5_decorator-pattern` 目录中，页面顶部 demo 用的是同一套思路。
+
+## 6. 流程图 / 数据流（非常重要）
+
+```text
+用户勾选“校验 / 草稿备份 / 埋点”增强
+↓
+React 组件根据勾选项组合装饰器
+↓
+得到 decoratedPublisher
+↓
+调用 decoratedPublisher.publish(input)
+↓
+外层装饰器先执行自己的增强逻辑
+↓
+最内层 BasePublisher 执行真实发布
+↓
+结果逐层返回
+↓
+组件展示发布结果与增强日志
+```
+
+```text
+DecoratorPatternDemo
+  ↓ 组合装饰器
+withAnalytics(withDraftBackup(withValidation(BasePublisher)))
+  ↓
+BasePublisher.publish()
+  ↓
+PublishResult
+  ↓
+结果卡片 / 装饰链预览 / 日志面板
+```
+
+装饰器模式真正厉害的地方不是“包起来”，而是**每一层都遵守同一个接口，所以可以自由叠加和替换。**
+
+## 7. 优点
+
+第一，**核心对象更干净**。基础发布服务只做真实发布，不再承担各种边缘增强逻辑。
+
+第二，**增强能力可组合**。你可以按需启用校验、备份、埋点，而不是把它们永远写死在主流程里。
+
+第三，**扩展性更好**。以后新增“发布耗时统计”“失败重试提示”“敏感词扫描”，只需要新增装饰器，不用改核心服务。
+
+第四，**更利于测试**。基础服务测基础行为，装饰器各测各的增强职责，测试边界非常清楚。
+
+第五，**很适合前端工程实践**。很多 Hook 包装、HOC 包装、API client 增强，本质上都在做这件事。
+
+## 8. 缺点
+
+装饰器模式也有成本。
+
+如果增强逻辑非常少，而且长期稳定不变，直接写进一个清晰的小函数可能更简单。为了一点点增强就拆出很多层包装，反而会让调用链变难读。
+
+另外，装饰器一旦过多，也可能带来两个问题：
+
+- 调试链路变长，不容易一下看清哪一层做了什么
+- 装饰顺序会影响行为，顺序错了可能出现意外结果
+
+所以装饰器模式更适合**增强逻辑会持续增长、且这些增强能独立存在**的场景，而不是所有函数都要层层包装。
+
+## 9. React / 常见库中的体现（重点）
+
+前端里最典型的装饰器思想，就是 HOC。一个基础组件本来只负责展示，通过 `withAuth`、`withTheme`、`withTracking` 这样的包装后，就获得了额外能力。
+
+自定义 Hook 也经常体现类似思想。比如一个基础请求 Hook，再往外包一层重试策略、一层错误提示、一层埋点上报，本质上也是在增强而不改核心逻辑。
+
+Axios 请求封装里，很多团队会在基础请求函数外叠加日志、重试、鉴权、错误兜底能力。虽然形式不一定显式叫 decorator，但工程思想是一致的。
+
+Redux 中的 middleware 也能从装饰器视角理解。原始 dispatch 能力不变，但被一层层中间件包装后，就获得了日志、异步处理、监控等额外能力。
+
+富文本编辑器、图表库、表单库里的插件体系，也很常使用装饰器思想。核心对象保持稳定，额外功能通过插件式增强附着上去。
+
+React 本身不会帮你决定增强逻辑该不该写进核心服务里。Fiber 解决的是渲染调度，不会替你做职责拆分。装饰器模式解决的是模块边界问题，这正是大型前端工程很需要的东西。
+
+## 10. 总结
+
+装饰器模式最核心的一句话是：**让核心对象稳定，把增强能力放到可叠加的包装层里。**
+
+真正应该学会的，不是背出“装饰器和代理有什么区别”，而是当你发现一个服务函数开始不断长出“顺便再做一下”的逻辑时，能意识到：这里可能需要把增强逻辑拆成装饰器，而不是继续往核心对象里塞代码。
+
+对 React 开发者来说，装饰器模式最大的意义，就是让核心流程保持简单，把不断增长的增强需求组织成可组合、可扩展、可维护的结构。

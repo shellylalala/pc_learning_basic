@@ -1,0 +1,28 @@
+export type PublishStatus =
+  | "idle"
+  | "validating"
+  | "submitting"
+  | "success"
+  | "error";
+
+export interface PublishState {
+  status: PublishStatus;
+  title: string;
+  message: string;
+}
+
+export interface StatusConfig {
+  label: string;
+  buttonText: string;
+  helperText: string;
+  tone: "neutral" | "warning" | "success" | "danger";
+  canSubmit: boolean;
+}
+
+export type PublishAction =
+  | { type: "updateTitle"; payload: string }
+  | { type: "startValidation" }
+  | { type: "validationPassed" }
+  | { type: "publishSuccess" }
+  | { type: "publishError" }
+  | { type: "reset" };

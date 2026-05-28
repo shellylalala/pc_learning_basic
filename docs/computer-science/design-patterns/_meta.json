@@ -9,5 +9,25 @@
     "type": "file",
     "name": "2_strategy-pattern",
     "label": "策略模式"
+  },
+  {
+    "type": "file",
+    "name": "3_state-pattern",
+    "label": "状态模式"
+  },
+  {
+    "type": "file",
+    "name": "4_proxy-pattern",
+    "label": "代理模式"
+  },
+  {
+    "type": "file",
+    "name": "5_decorator-pattern",
+    "label": "装饰器模式"
+  },
+  {
+    "type": "file",
+    "name": "6_facade-pattern",
+    "label": "外观模式"
   }
 ]
