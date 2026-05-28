@@ -3,5 +3,10 @@
     "type": "dir-section-header",
     "name": "start",
     "label": "开始阅读"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "design-patterns",
+    "label": "设计模式"
   }
 ]

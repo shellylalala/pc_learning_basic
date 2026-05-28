@@ -1,0 +1,13 @@
+[
+  "introduction",
+  {
+    "type": "file",
+    "name": "1_observer-pattern",
+    "label": "观察者模式"
+  },
+  {
+    "type": "file",
+    "name": "2_strategy-pattern",
+    "label": "策略模式"
+  }
+]

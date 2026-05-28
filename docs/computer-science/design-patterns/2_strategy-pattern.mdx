@@ -1,0 +1,303 @@
+import { Tabs, Tab } from "@rspress/core/theme";
+import { StrategyPatternDemo } from "../../../theme/components/StrategyPatternDemo";
+
+# 策略模式
+
+> 面向 React + TypeScript 初中级开发者：策略模式最常见的价值，不是“抽象出很多类”，而是把不断膨胀的 if else 分支拆成可替换、可测试、可扩展的业务规则模块。
+
+<StrategyPatternDemo />
+
+## 1. 设计模式概念
+
+策略模式解决的是“同一件事有多种做法，而且做法可以按条件切换”的问题。
+
+一句话理解：**把会变化的算法或业务规则，从主流程里拆出去，变成一组可以替换的策略**。
+
+它的核心思想不是“为了设计模式而设计模式”，而是承认一个事实：前端业务里很多复杂度都来自分支。支付优惠、表单校验、列表排序、路由拦截、埋点上报、按钮渲染、权限判断，这些逻辑一开始只有两三种情况，后面很容易越长越大。
+
+策略模式解决的本质问题是：**不要让主流程同时承担“选择规则”和“执行规则”两种职责**。
+
+## 2. 为什么前端需要它
+
+React 项目最容易腐化的地方之一，就是把所有业务分支直接塞进组件里。
+
+比如一个电商结算面板：
+
+- 普通用户按原价结算
+- 会员用户打九折
+- 新用户首单立减
+- 大促活动按满减规则计算
+- 某些策略还会影响免邮、角标文案、推荐提示
+
+一开始你可能只写几个 if else。等需求多了之后，组件会同时负责：
+
+- 管理表单状态
+- 处理用户交互
+- 决定用哪种优惠规则
+- 计算最终金额
+- 拼接说明文案
+
+结果就是组件越来越像一个“大型条件分发器”。
+
+React 工程尤其容易遇到这个问题，因为组件本来就已经承担了渲染、状态和交互。如果再把复杂业务规则塞进去，代码会出现几个明显症状：
+
+- JSX 旁边夹着大量 if else
+- 一个需求改动需要进组件内部改很多分支
+- 新增一种业务规则时容易改坏旧逻辑
+- 单元测试很难只测某一种结算规则
+
+策略模式的价值就在这里：React 组件只做“收集输入 + 选择策略 + 展示结果”，具体计算规则交给独立策略模块。这样组件边界会清楚很多。
+
+## 3. 真实业务场景
+
+| 场景             | 为什么适合策略模式                                                                       |
+| ---------------- | ---------------------------------------------------------------------------------------- |
+| 电商结算优惠规则 | 不同用户身份、活动类型、优惠券组合对应不同计算方式，继续堆 if else 会让结算组件失控。    |
+| 表单校验策略     | 手机号、邮箱、企业编码、身份证等字段校验规则不同，但表单主流程不应该知道每种字段的细节。 |
+| 列表排序与筛选   | 同一个列表可能有销量优先、价格优先、评分优先、智能推荐多种排序逻辑，适合抽成可替换策略。 |
+| 权限控制         | 普通用户、审核员、管理员、超级管理员看到的按钮集和行为不同，渲染逻辑适合通过策略切换。   |
+| 支付方式处理     | 微信、支付宝、银行卡、企业授信的校验和下单前处理不同，但提交按钮不应该写满分支。         |
+
+共同点都一样：**流程是同一个流程，但规则不是同一个规则**。
+
+## 4. 错误示范（非常重要）
+
+先看一个没有策略模式的结算函数：
+
+```tsx
+type PricingMode = "standard" | "member" | "new-user" | "campaign";
+
+function calculatePrice(
+  mode: PricingMode,
+  amount: number,
+  quantity: number,
+  isFirstOrder: boolean,
+) {
+  let total = amount * quantity;
+  let discount = 0;
+  let description = "原价结算";
+
+  if (mode === "standard") {
+    description = "普通价";
+  }
+
+  if (mode === "member") {
+    discount = total * 0.1;
+    description = "会员九折";
+  }
+
+  if (mode === "new-user") {
+    if (isFirstOrder) {
+      discount = 40;
+      description = "首单立减 40";
+    } else {
+      description = "非首单，恢复原价";
+    }
+  }
+
+  if (mode === "campaign") {
+    if (total >= 300) {
+      discount = 60;
+      description = "活动满 300 减 60";
+    } else if (total >= 200) {
+      discount = 30;
+      description = "活动满 200 减 30";
+    } else {
+      description = "未满足活动门槛";
+    }
+  }
+
+  return {
+    total,
+    discount,
+    payable: Math.max(total - discount, 0),
+    description,
+  };
+}
+```
+
+这段代码现在看起来还能忍，但它会非常快地腐化：
+
+- 加一个企业客户价，要继续改这个函数
+- 加一个买赠策略，还得继续改
+- 某种策略要加免邮文案，又继续改
+- 某个活动只在 App 内生效，又是一层条件
+
+最后你会得到一个越来越长的计算函数，任何策略改动都要进入同一个文件。真实项目里，这种代码通常会带来两个后果：一是改动相互污染，二是测试只能围绕“大函数”做，非常笨重。
+
+## 5. 使用设计模式重构
+
+这次 demo 采用真实前端场景：**电商结算页的优惠策略切换**。
+
+重构后的分工是：
+
+- `pricingStrategies.ts` 只负责定义规则
+- React 组件负责收集输入和选择策略
+- 每种策略都实现同一套 `calculate` 接口
+- 新增一种策略时，不需要改结算主流程，只需要注册新策略
+
+<Tabs>
+
+<Tab label="types.ts">
+
+```ts
+export type PricingStrategyType =
+  | "standard"
+  | "member"
+  | "newUser"
+  | "campaign";
+
+export interface PricingInput {
+  unitPrice: number;
+  quantity: number;
+  isFirstOrder: boolean;
+}
+
+export interface PricingResult {
+  subtotal: number;
+  discount: number;
+  shippingFee: number;
+  payable: number;
+  badge: string;
+  description: string;
+}
+
+export interface PricingStrategy {
+  type: PricingStrategyType;
+  label: string;
+  summary: string;
+  calculate: (input: PricingInput) => PricingResult;
+}
+```
+
+</Tab>
+
+<Tab label="pricingStrategies.ts">
+
+```ts
+export const pricingStrategies: Record<PricingStrategyType, PricingStrategy> = {
+  standard: {
+    type: "standard",
+    label: "普通用户价",
+    summary: "没有额外优惠，适合作为默认策略。",
+    calculate(input) {
+      const subtotal = input.unitPrice * input.quantity;
+
+      return {
+        subtotal,
+        discount: 0,
+        shippingFee: subtotal >= 199 ? 0 : 12,
+        payable: subtotal >= 199 ? subtotal : subtotal + 12,
+        badge: "默认规则",
+        description: "普通用户按原价结算，满 199 包邮。",
+      };
+    },
+  },
+};
+```
+
+</Tab>
+
+<Tab label="StrategyPatternDemo.tsx">
+
+```tsx
+const activeStrategy = pricingStrategies[strategyType];
+const result = activeStrategy.calculate({
+  unitPrice,
+  quantity,
+  isFirstOrder,
+});
+```
+
+</Tab>
+
+</Tabs>
+
+这里最关键的变化不是“多了几个文件”，而是业务规则终于离开了组件。组件不再关心“会员怎么打折”“活动怎么满减”，它只依赖统一的策略接口。
+
+完整源码已经同步放到本章的 `code/2_strategy-pattern` 目录中，页面顶部 demo 使用的是同一套实现思路。
+
+## 6. 流程图 / 数据流（非常重要）
+
+```text
+用户修改单价 / 数量 / 是否首单
+↓
+React state 更新
+↓
+用户切换 strategyType
+↓
+根据 strategyType 选中对应策略
+↓
+调用 strategy.calculate(input)
+↓
+得到 subtotal / discount / payable / 文案
+↓
+结算卡片重新渲染
+```
+
+```text
+CheckoutPanel
+	↓ 收集输入
+pricingStrategies[strategyType]
+	↓ 执行具体规则
+PricingResult
+	↓
+PriceSummary / StrategyList / RecommendationCard
+```
+
+策略模式的关键不是“分发一次”，而是让这个分发稳定地停留在边界层，不要往组件内部蔓延。
+
+## 7. 优点
+
+第一，**可维护性更高**。每种优惠规则各自待在自己的策略里，不会把一个大组件越堆越乱。
+
+第二，**扩展性更好**。新增一个“企业客户价”或者“直播间专享价”，通常只需要新增一个策略对象，再把它注册进去，不需要改主流程。
+
+第三，**可测试性更强**。你可以单独测试某个策略的输入输出，而不必把整个 React 组件渲染起来再去测业务规则。
+
+第四，**更适合团队协作**。负责活动规则的人改策略文件，负责界面表现的人改组件，两边边界更清楚。
+
+第五，**组件职责更干净**。React 组件回到自己擅长的事情：状态、交互、渲染。规则逻辑则进入纯函数或配置对象。
+
+## 8. 缺点
+
+策略模式也不是免费午餐。
+
+如果业务只有两种简单分支，而且短期内不会扩展，直接写清楚的条件判断可能更简单。为了套模式而拆很多策略文件，反而会增加认知成本。
+
+另外，策略一多之后，管理成本也会上升：
+
+- 你要维护策略注册表
+- 要保证接口一致
+- 要处理策略之间的共享逻辑
+- 要避免“策略里再套很多 if else”
+
+所以它更适合**规则会持续增长、并且每种规则都相对独立**的场景。不适合为了“显得高级”把任何 if else 都抽成策略。
+
+## 9. React / 常见库中的体现（重点）
+
+React 本身没有显式叫“策略模式”的 API，但很多实践都在用这个思想。
+
+在组件渲染里，按不同业务状态选择不同渲染方案，本质上就是在选择策略。只是很多人把策略直接写成了 JSX 分支，时间一长就会腐化。
+
+Redux 生态里，不同中间件、不同 reducer 组合方式，很多时候也是在按场景选择处理策略。它们共同点都是：主流程固定，处理行为可替换。
+
+Zustand 中经常会根据业务类型注入不同 action 实现，这也是策略思想。比如不同页面共享一个 store 结构，但保存、校验、提交流程不一样。
+
+React Query 里常见的 `retry`、`select`、缓存处理方式，也可以理解成一种请求处理策略的选择。
+
+Axios 的请求重试、鉴权头拼装、错误处理，经常适合抽成不同策略，而不是写在一个巨大的请求函数里。
+
+Next.js 中，同一页面可能根据设备类型、用户身份、实验分桶选择不同数据获取或渲染方案，这本质也是策略切换，只不过表现层更复杂。
+
+从 Hooks 设计角度看，策略模式特别适合配合自定义 Hook。Hook 负责状态和流程编排，策略负责具体业务规则。这样 Hook 不会越来越重。
+
+React 的调度机制不会帮你减少业务分支复杂度。Fiber 能解决的是更新优先级和渲染调度，不会替你拆清“这 8 种优惠规则应该怎么组织”。这个问题仍然需要靠好的模块边界来解决，而策略模式正是在做这件事。
+
+## 10. 总结
+
+策略模式最核心的一句话是：**把可替换的业务规则，从组件主流程里拆出去，让主流程稳定，让规则自由变化。**
+
+真正该学会的不是“我会不会背策略模式定义”，而是当你看到组件里开始长出越来越多 if else、switch、嵌套条件时，能意识到：这里已经不是渲染问题了，而是规则组织问题。
+
+对 React 开发者来说，策略模式最有价值的地方，就是帮助你把组件从“业务条件泥潭”里救出来，让状态、交互、渲染和规则回到各自该待的位置。

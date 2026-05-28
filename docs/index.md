@@ -8,7 +8,7 @@ hero:
   actions:
     - theme: brand
       text: Quick Start
-      link: /guide/start/introduction
+      link: /foundations/start/introduction
     - theme: alt
       text: GitHub
       link: https://github.com/shellylalala/pc_learning_basic

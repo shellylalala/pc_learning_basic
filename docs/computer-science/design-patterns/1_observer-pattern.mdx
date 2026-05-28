@@ -1,0 +1,302 @@
+import { Tabs, Tab } from "@rspress/core/theme";
+import { ObserverPatternDemo } from "../../../theme/components/ObserverPatternDemo";
+
+# 观察者模式
+
+> 在前端开发中，我们经常会遇到需要对用户的操作进行响应的场景，例如页面上的按钮点击、输入框中的内容变化等。为了实现这种响应式的设计，我们可以使用观察者模式来解耦各个组件之间的依赖关系。
+
+<ObserverPatternDemo />
+
+## 1. 设计模式概念
+
+观察者模式(Observer Pattern)定义了一种**一对多**的依赖关系，解决的是“一个对象状态变化后，如何自动通知多个依赖方”的问题。
+
+一句话理解：**被观察者只负责维护状态和发通知，观察者只负责订阅变化并做自己的更新**。
+
+它的核心思想不是“写一个 EventEmitter 类”这么简单，而是把两件事拆开：
+
+- 状态变化发生在哪里
+- 谁关心这个变化，以及变化后要做什么
+
+如果这两件事混在一起，业务一复杂，发布通知、刷新列表、更新红点、埋点、弹 toast、同步缓存这些逻辑就会挤在同一个函数里。观察者模式要解决的本质问题就是：**让状态变化和后续响应解耦**。
+
+## 2. 为什么前端需要它
+
+React 页面天然是状态驱动 UI：状态变了，组件重新渲染。问题是，真实业务里状态变化通常不只影响一个组件。
+
+比如一个消息通知中心：
+
+- 右上角红点要更新未读数
+- 下拉面板要展示最新消息
+- Toast 要弹出新消息提醒
+- 埋点模块要记录用户收到通知
+- 某些页面可能还要刷新任务列表
+
+如果没有观察者思维，最容易写成“一个发布函数里顺手把所有事情都做了”。一开始看起来很直接，需求一多就会变成这样：发布消息时判断消息类型，更新红点，操作 DOM，触发 toast，调用埋点，顺便刷新某个页面状态。函数越来越长，组件越来越知道彼此的存在。
+
+React 工程里尤其容易遇到这个问题，因为组件树是分层的，但业务事件经常是跨层传播的。父子传 props 可以解决局部通信，但全局通知、权限变化、主题切换、登录状态、请求缓存变化这些事情，不适合靠一层层 props 手动传递。
+
+观察者模式让我们把数据流整理成这样：状态源负责更新和通知，组件通过订阅拿到最新快照，React 根据快照驱动 UI 更新。这样组件不需要知道“是谁改了状态”，发布方也不需要知道“哪些组件正在展示它”。
+
+## 3. 真实业务场景
+
+| 场景                     | 为什么适合观察者模式                                                                          |
+| ------------------------ | --------------------------------------------------------------------------------------------- |
+| 全局消息通知中心         | 新消息会同时影响红点、通知列表、Toast、声音提醒和埋点，不适合让发布函数直接调用每个 UI 模块。 |
+| Zustand / Redux 状态订阅 | store 更新后通知订阅者，组件读取最新状态并重新渲染，这是观察者思想在状态管理里的典型体现。    |
+| React Query 缓存更新     | 请求结果变化后，依赖这个 query 的组件自动刷新，而组件不需要知道请求是哪个地方触发的。         |
+| 主题切换系统             | 用户切换主题后，按钮、布局、图表、编辑器等多个模块都要响应，不应该让主题模块逐个调用组件。    |
+| 埋点与行为监听           | 用户操作发生后，业务逻辑、日志系统、实验系统可能都关心这个事件，但它们不应该互相耦合。        |
+
+你会发现，这些场景都有一个共同点：**一个变化，多个响应；响应方数量可能增长，而且不应该反向污染状态源**。
+
+## 4. 错误示范（非常重要）
+
+先看一个没有观察者模式的通知发布函数。它能工作，但很快会腐化。
+
+```tsx
+type NoticeType = "system" | "order" | "security";
+
+function publishNotice(type: NoticeType, title: string) {
+  // 1. 更新通知列表
+  noticeList.unshift({ type, title, read: false });
+
+  // 2. 更新红点
+  unreadCount += 1;
+  setHeaderBadge(unreadCount);
+
+  // 3. 弹 toast
+  if (type === "system") {
+    showToast(`系统通知：${title}`);
+  }
+
+  if (type === "order") {
+    showToast(`订单消息：${title}`);
+    refreshOrderPage();
+  }
+
+  if (type === "security") {
+    showToast(`安全提醒：${title}`);
+    reportSecurityEvent(title);
+  }
+
+  // 4. 埋点
+  track("notice_received", { type, title });
+}
+```
+
+这段代码的问题不在于语法，而在于职责混在一起：
+
+- 通知模块知道了 Header 红点怎么更新
+- 通知模块知道了 Toast 怎么弹
+- 通知模块知道了订单页怎么刷新
+- 通知模块知道了安全埋点怎么上报
+- 每增加一种通知类型，就要继续往这个函数里塞 if else
+
+真实项目里它会继续变坏：运营要加营销通知，风控要加拦截通知，App 内嵌页要加 bridge 通知，国际化要改文案，A/B 实验要改弹窗策略。最后一个发布函数会变成“全项目副作用集中地”。
+
+这就是观察者模式要解决的问题：**发布方不应该知道所有响应方**。
+
+## 5. 使用设计模式重构
+
+下面的 demo 使用一个真实前端场景：消息通知中心。
+
+核心设计：
+
+- `NotificationCenter` 是被观察者，负责保存通知状态、发布消息、通知订阅者。
+- React 组件通过 `useSyncExternalStore` 订阅外部 store，这是 React 18+ 推荐的外部状态订阅方式。
+- Header 红点、通知列表、操作面板都只读取快照，不直接互相调用。
+- 发布消息时，状态源只通知“有人关心变化”，不关心具体哪些组件会更新。
+
+<Tabs>
+
+<Tab label="types.ts">
+
+```ts
+export type NotificationLevel = "info" | "success" | "warning" | "error";
+
+export interface NotificationMessage {
+  id: string;
+  title: string;
+  content: string;
+  level: NotificationLevel;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface NotificationSnapshot {
+  messages: NotificationMessage[];
+  unreadCount: number;
+  lastEvent: string;
+}
+
+export interface PublishInput {
+  title: string;
+  content: string;
+  level: NotificationLevel;
+}
+```
+
+</Tab>
+
+<Tab label="notificationCenter.ts">
+
+```ts
+class NotificationCenter {
+  private messages: NotificationMessage[] = [];
+  private listeners = new Set<NotificationListener>();
+  private lastEvent = "等待通知发布";
+
+  subscribe = (listener: NotificationListener) => {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  };
+
+  getSnapshot = (): NotificationSnapshot => ({
+    messages: this.messages,
+    unreadCount: this.messages.filter((message) => !message.read).length,
+    lastEvent: this.lastEvent,
+  });
+
+  publish(input: PublishInput) {
+    const message = createMessage(input);
+    this.messages = [message, ...this.messages].slice(0, 6);
+    this.lastEvent = `发布了「${message.title}」`;
+    this.emit();
+  }
+
+  markAllRead() {
+    this.messages = this.messages.map((message) => ({
+      ...message,
+      read: true,
+    }));
+    this.lastEvent = "所有通知已读";
+    this.emit();
+  }
+
+  private emit() {
+    this.listeners.forEach((listener) => listener());
+  }
+}
+```
+
+</Tab>
+
+<Tab label="useNotificationCenter.ts">
+
+```ts
+import { useSyncExternalStore } from "react";
+import { notificationCenter } from "./notificationCenter";
+
+export function useNotificationCenter() {
+  return useSyncExternalStore(
+    notificationCenter.subscribe,
+    notificationCenter.getSnapshot,
+    notificationCenter.getSnapshot,
+  );
+}
+```
+
+</Tab>
+
+</Tabs>
+
+完整代码已经放在本章的 `code/1_observer-pattern` 目录中，页面上方的交互 demo 也是直接引用这些文件渲染出来的。
+
+## 6. 流程图 / 数据流（非常重要）
+
+观察者模式在这个 demo 里的数据流是：
+
+```text
+用户点击“发布订单通知”
+↓
+调用 notificationCenter.publish()
+↓
+NotificationCenter 更新 messages
+↓
+NotificationCenter 执行 emit()
+↓
+所有通过 subscribe 注册的监听器被通知
+↓
+useSyncExternalStore 读取最新 snapshot
+↓
+React 调度组件更新
+↓
+Header 红点、通知列表、状态面板重新 render
+```
+
+组件协作关系是：
+
+```text
+NotificationActions
+  ↓ 发布通知
+NotificationCenter Store
+  ↓ 通知订阅者
+useNotificationCenter Hook
+  ↓ 提供快照
+NotificationBadge / NotificationList / NotificationStatus
+  ↓
+UI 根据状态重新渲染
+```
+
+这个结构的关键点是：`NotificationActions` 不知道有多少组件在展示通知，`NotificationBadge` 也不知道是谁发布了通知。它们只通过同一个状态源协作。
+
+## 7. 优点
+
+观察者模式对前端工程最大的价值，是让“状态变化”和“变化后的响应”**分离**。
+
+在可维护性上，发布通知的代码不会因为 UI 增加而越来越臃肿。以后新增声音提醒、浏览器通知、埋点订阅者，不需要改发布函数，只需要新增订阅逻辑。
+
+在扩展性上，多个模块可以围绕同一个状态源协作。通知列表、Header 红点、侧边栏提醒都能独立演进，不需要互相传 props 或直接调用。
+
+在可测试性上，`NotificationCenter` 可以脱离 React 单独测试：发布一条消息后，快照是否正确，监听器是否被调用，已读逻辑是否生效。这比测试一堆耦合在组件里的副作用简单得多。
+
+在团队协作上，负责通知中心的人维护 store，负责 Header 的人只订阅 unreadCount，负责消息面板的人只关心 messages。边界清楚后，代码冲突和隐式依赖都会减少。
+
+## 8. 缺点
+
+观察者模式不是越多越好。
+
+第一个问题是调试链路会变长。直接调用函数时，你能顺着调用栈看见发生了什么；观察者模式里，发布方只是 emit，真正响应逻辑分散在多个订阅者里。如果缺少命名、日志和边界，排查问题会变难。
+
+第二个问题是订阅生命周期。如果手写订阅但忘记取消订阅，可能造成内存泄漏或重复更新。React 里使用 `useSyncExternalStore`、`useEffect` 清理函数或成熟状态管理库，就是为了降低这个风险。
+
+第三个问题是抽象成本。一个只有两个组件的小页面，直接 props 传递可能更清晰。为了“显得高级”硬塞观察者模式，只会让初学者更难读懂代码。
+
+是否值得使用，要看三个条件：
+
+- 是否存在一个变化影响多个模块
+- 响应方是否会继续增加
+- 发布方是否已经开始知道太多 UI 或业务细节
+
+如果答案都是“是”，观察者模式就值得考虑。
+
+## 9. React / 常见库中的体现（重点）
+
+React 本身不是简单的观察者模式实现，但它的很多机制都体现了类似思想。
+
+在 React 组件里，状态变化后触发重新渲染。组件不需要手动操作 DOM，而是声明“状态是什么，UI 就是什么”。这是一种状态驱动 UI 的模型。
+
+在 `useSyncExternalStore` 里，React 明确要求外部 store 提供两个能力：`subscribe` 和 `getSnapshot`。这几乎就是观察者模式在 React 18+ 里的标准入口：外部 store 负责通知，React 负责读取快照并调度更新。
+
+Redux 的 `store.subscribe(listener)` 是非常典型的观察者模式。dispatch action 后 reducer 计算新 state，store 通知订阅者，React-Redux 再让相关组件更新。
+
+Zustand 也是类似思想。store 内部维护 state 和 listeners，调用 setState 后通知订阅者。组件通过 selector 订阅自己关心的状态片段，避免所有组件都跟着重渲染。
+
+React Query 里，一个 query 的缓存变化后，所有使用这个 query 的组件都会收到更新。组件不需要知道请求来自哪里，只关心缓存快照，这是观察者思想在异步数据缓存里的体现。
+
+Vue 的响应式系统更接近“依赖收集 + 通知更新”。组件渲染时读取响应式数据，框架记录依赖；数据变化后，相关副作用重新执行。
+
+Axios 拦截器不是纯观察者模式，但它也体现了“请求流程中的扩展点”。多个请求前后处理逻辑可以注册到统一链路里，而不是散落在每个 API 调用处。
+
+Next.js 里的路由状态、数据缓存和服务端/客户端边界，也大量依赖“状态变化后驱动对应模块刷新”的思想。你不一定会直接写 Observer 类，但你会一直使用这种解耦方式。
+
+从 Fiber 和调度角度看，React 不会在状态变化时立刻粗暴更新整个页面，而是把更新变成可调度的工作。观察者模式负责“谁需要知道变化”，React 调度机制负责“什么时候、以什么优先级完成更新”。
+
+## 10. 总结
+
+观察者模式最核心的一句话是：**状态源不直接控制所有响应方，而是通过订阅和通知，让关心变化的模块自己响应变化**。
+
+真正应该学会的不是“如何背出 Subject、Observer、notify 这些名字”，而是建立一种前端架构思维：当一个变化开始影响多个组件、多个 Hook、多个业务模块时，不要继续往一个函数里塞 if else，而要思考状态源、订阅关系、数据流和模块边界。
+
+对 React 开发者来说，观察者模式不是冷门设计模式，它就在 Redux、Zustand、React Query、Context、事件监听、外部 store 订阅和 UI 自动更新背后。理解它，你会更容易看懂状态管理库，也更容易设计可维护的前端系统。
