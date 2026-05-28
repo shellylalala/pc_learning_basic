@@ -1,0 +1,94 @@
+import type {
+  NotificationListener,
+  NotificationMessage,
+  NotificationSnapshot,
+  PublishInput,
+} from "./types";
+
+let notificationSequence = 0;
+
+function createMessage(input: PublishInput): NotificationMessage {
+  notificationSequence += 1;
+
+  return {
+    id: `notice-${notificationSequence}`,
+    title: input.title,
+    content: input.content,
+    level: input.level,
+    read: false,
+    createdAt: new Intl.DateTimeFormat("zh-CN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).format(new Date()),
+  };
+}
+
+class NotificationCenter {
+  private messages: NotificationMessage[] = [];
+  private listeners = new Set<NotificationListener>();
+  private lastEvent = "等待通知发布";
+  private snapshot: NotificationSnapshot = {
+    messages: [],
+    unreadCount: 0,
+    lastEvent: this.lastEvent,
+  };
+
+  subscribe = (listener: NotificationListener) => {
+    this.listeners.add(listener);
+
+    return () => {
+      this.listeners.delete(listener);
+    };
+  };
+
+  getSnapshot = (): NotificationSnapshot => this.snapshot;
+
+  publish(input: PublishInput) {
+    const message = createMessage(input);
+
+    this.messages = [message, ...this.messages].slice(0, 6);
+    this.lastEvent = `发布了「${message.title}」`;
+    this.updateSnapshot();
+    this.emit();
+  }
+
+  markAllRead() {
+    if (this.messages.every((message) => message.read)) {
+      return;
+    }
+
+    this.messages = this.messages.map((message) => ({
+      ...message,
+      read: true,
+    }));
+    this.lastEvent = "所有通知已读";
+    this.updateSnapshot();
+    this.emit();
+  }
+
+  clear() {
+    if (this.messages.length === 0) {
+      return;
+    }
+
+    this.messages = [];
+    this.lastEvent = "清空通知列表";
+    this.updateSnapshot();
+    this.emit();
+  }
+
+  private updateSnapshot() {
+    this.snapshot = {
+      messages: this.messages,
+      unreadCount: this.messages.filter((message) => !message.read).length,
+      lastEvent: this.lastEvent,
+    };
+  }
+
+  private emit() {
+    this.listeners.forEach((listener) => listener());
+  }
+}
+
+export const notificationCenter = new NotificationCenter();

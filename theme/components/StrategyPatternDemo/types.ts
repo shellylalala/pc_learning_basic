@@ -1,0 +1,27 @@
+export type PricingStrategyType =
+  | "standard"
+  | "member"
+  | "newUser"
+  | "campaign";
+
+export interface PricingInput {
+  unitPrice: number;
+  quantity: number;
+  isFirstOrder: boolean;
+}
+
+export interface PricingResult {
+  subtotal: number;
+  discount: number;
+  shippingFee: number;
+  payable: number;
+  badge: string;
+  description: string;
+}
+
+export interface PricingStrategy {
+  type: PricingStrategyType;
+  label: string;
+  summary: string;
+  calculate: (input: PricingInput) => PricingResult;
+}

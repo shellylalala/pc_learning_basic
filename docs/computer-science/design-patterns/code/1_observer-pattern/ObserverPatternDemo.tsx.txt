@@ -1,0 +1,33 @@
+import { notificationCenter } from "./notificationCenter";
+import { useNotificationCenter } from "./useNotificationCenter";
+import type { NotificationLevel, PublishInput } from "./types";
+import "./observer-demo.css";
+
+const notificationPresets: PublishInput[] = [
+  {
+    title: "订单支付成功",
+    content: "订单中心、Header 红点和通知列表都会收到同一次状态变化。",
+    level: "success",
+  },
+  {
+    title: "接口异常告警",
+    content: "监控模块发布告警，多个 UI 模块只需要订阅通知中心。",
+    level: "warning",
+  },
+  {
+    title: "账号安全提醒",
+    content: "安全模块不需要知道页面上有哪些组件正在展示通知。",
+    level: "error",
+  },
+];
+
+const levelText: Record<NotificationLevel, string> = {
+  info: "信息",
+  success: "成功",
+  warning: "警告",
+  error: "风险",
+};
+
+export function ObserverPatternDemo() {
+  return <div>...</div>;
+}

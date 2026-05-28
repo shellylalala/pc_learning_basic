@@ -1,0 +1,20 @@
+import { useState } from "react";
+import { pricingStrategies, strategyList } from "./pricingStrategies";
+import type { PricingStrategyType } from "./types";
+import "./strategy-demo.css";
+
+export function StrategyPatternDemo() {
+  const [unitPrice, setUnitPrice] = useState(128);
+  const [quantity, setQuantity] = useState(2);
+  const [strategyType, setStrategyType] = useState<PricingStrategyType>("standard");
+  const [isFirstOrder, setIsFirstOrder] = useState(true);
+
+  const activeStrategy = pricingStrategies[strategyType];
+  const result = activeStrategy.calculate({
+    unitPrice,
+    quantity,
+    isFirstOrder,
+  });
+
+  return <div>...</div>;
+}

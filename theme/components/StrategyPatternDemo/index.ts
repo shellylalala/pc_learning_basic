@@ -1,0 +1,1 @@
+export { StrategyPatternDemo } from "./StrategyPatternDemo";
