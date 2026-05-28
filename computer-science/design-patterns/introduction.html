@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh">
+  <head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设计模式 · 介绍 - 赛博藏经阁</title>
+<script>{;const saved = localStorage.getItem('rspress-theme-appearance');const preferDark = window.matchMedia('(prefers-color-scheme: dark)').matches;const isDark = !saved || saved === 'auto' ? preferDark : saved === 'dark';document.documentElement.classList.toggle('dark', isDark);document.documentElement.classList.toggle('rp-dark', isDark);document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';}</script>
+<link href="/pc_learning_basic/static/css/styles.7f968212d0.css" rel="stylesheet">
+<script defer src="/pc_learning_basic/static/js/styles.3c154d483c.js"></script>
+<script defer src="/pc_learning_basic/static/js/lib-react.f7612d6065.js"></script>
+<script defer src="/pc_learning_basic/static/js/lib-router.c1c7495844.js"></script>
+<script defer src="/pc_learning_basic/static/js/248.65a10f91c3.js"></script>
+<script defer src="/pc_learning_basic/static/js/index.f09051dd02.js"></script>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="generator" content="Rspress v2.0.13">
+<link rel="icon" href="/pc_learning_basic/robot2.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="设计模式 · 介绍 - 赛博藏经阁">
+<meta name="description" content="设计模式对前端的价值，不在于背出 23 种名字，而在于你能在 React 组件协作、状态流转、接口封装和复杂业务抽象里少走很多弯路。">
+<meta property="og:description" content="设计模式对前端的价值，不在于背出 23 种名字，而在于你能在 React 组件协作、状态流转、接口封装和复杂业务抽象里少走很多弯路。"></head>
+
+  <body>
+    <div id="__rspress_root"><link rel="preload" as="image" href="/pc_learning_basic/robot2.png"/><header class="rp-nav"><div class="rp-nav__left"><div class="rp-nav__title"><a href="/pc_learning_basic/" class="rp-nav__title__link rp-link"><div class="rp-nav__title__logo"><img src="/pc_learning_basic/robot2.png" alt="logo" id="logo" class="rspress-logo rp-nav__title__logo-image rp-nav__title__logo-image--light"/><img src="/pc_learning_basic/robot2.png" alt="logo" id="logo" class="rspress-logo rp-nav__title__logo-image rp-nav__title__logo-image--dark"/></div><span>赛博藏经阁</span></a></div></div><div class="rp-nav__right"><button class="rp-search-button"><div class="rp-search-button__content"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 20 21" class="rp-search-button__icon"><path fill="currentColor" d="M8.333 1.913A6.667 6.667 0 0 1 15 8.58c0 1.54-.525 2.957-1.402 4.085l4.49 4.492a.834.834 0 0 1-1.177 1.178l-4.491-4.49a6.64 6.64 0 0 1-4.087 1.402 6.667 6.667 0 0 1 0-13.334m0 1.667a5 5 0 1 0 0 10 5 5 0 0 0 0-10"></path></svg><span class="rp-search-button__word">搜索</span></div><div class="rp-search-button__hotkey" style="opacity:0"><span></span><span>K</span></div></button><div class="rp-search-button--mobile"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 20 21"><path fill="currentColor" d="M8.333 1.913A6.667 6.667 0 0 1 15 8.58c0 1.54-.525 2.957-1.402 4.085l4.49 4.492a.834.834 0 0 1-1.177 1.178l-4.491-4.49a6.64 6.64 0 0 1-4.087 1.402 6.667 6.667 0 0 1 0-13.334m0 1.667a5 5 0 1 0 0 10 5 5 0 0 0 0-10"></path></svg></div><ul class="rp-nav-menu rp-nav-menu--right"><li class="rp-nav-menu__item"><a href="/pc_learning_basic/foundations/start/introduction.html" class="rp-nav-menu__item__container rp-link">前端基础</a></li><li class="rp-nav-menu__item rp-nav-menu__item--active"><a href="/pc_learning_basic/computer-science/start/introduction.html" class="rp-nav-menu__item__container rp-link">计算机基础</a></li></ul><div class="rp-nav__others"><div class="rp-nav-menu__divider"></div><div class="rp-switch-appearance"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" class="rp-switch-appearance__icon rp-switch-appearance__icon--sun"><path fill="currentColor" d="m7.001 15.848-1.226 1.226a.58.58 0 0 0 0 .818.58.58 0 0 0 .818 0l1.226-1.226a.58.58 0 0 0 0-.818.58.58 0 0 0-.818 0m-.352-8.735a.584.584 0 0 0 .825-.825L6.237 5.051a.584.584 0 0 0-.825.825zM5.011 11.07h-1.75a.584.584 0 0 0 0 1.167h1.75c.324 0 .584-.26.584-.583a.585.585 0 0 0-.584-.584m7.003-5.835c.324 0 .584-.26.584-.584V2.9a.58.58 0 0 0-.584-.584.58.58 0 0 0-.583.583V4.65c0 .323.262.584.583.584m5.616 1.621 1.226-1.225a.58.58 0 0 0 0-.818.58.58 0 0 0-.818 0l-1.226 1.225a.58.58 0 0 0 0 .818.576.576 0 0 0 .818 0m3.138 4.214h-1.75a.58.58 0 0 0-.584.584c0 .324.26.584.583.584h1.751a.584.584 0 1 0 0-1.167m-3.389 5.124a.584.584 0 0 0-.825.825l1.238 1.238a.584.584 0 0 0 .825-.826zm-5.365-9.795a5.256 5.256 0 0 0-5.257 5.258 5.256 5.256 0 0 0 5.257 5.257 5.256 5.256 0 0 0 5.257-5.257 5.256 5.256 0 0 0-5.257-5.258m0 11.675a.58.58 0 0 0-.583.583v1.751a.582.582 0 1 0 1.167 0v-1.75a.584.584 0 0 0-.584-.584"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" fill="currentColor" viewBox="0 0 19 19" class="rp-switch-appearance__icon rp-switch-appearance__icon--moon"><path fill="currentColor" d="M9.166 0a9.2 9.2 0 0 1 1.857.188.834.834 0 0 1 .042 1.623 4.47 4.47 0 1 0 5.457 5.457l.048-.135a.834.834 0 0 1 1.575.177q.186.902.188 1.856A9.168 9.168 0 1 1 9.166 0"></path></svg></div><div class="rp-social-links"><a href="https://github.com/shellylalala/pc_learning_basic" target="_blank" rel="noopener noreferrer" class="rp-social-links__item"><div class="rp-social-links__icon"><div class="rp-social-links__icon"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12c0 5.303 3.438 9.8 8.205 11.385c.6.113.82-.258.82-.577c0-.285-.01-1.04-.015-2.04c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729c1.205.084 1.838 1.236 1.838 1.236c1.07 1.835 2.809 1.305 3.495.998c.108-.776.417-1.305.76-1.605c-2.665-.3-5.466-1.332-5.466-5.93c0-1.31.465-2.38 1.235-3.22c-.135-.303-.54-1.523.105-3.176c0 0 1.005-.322 3.3 1.23c.96-.267 1.98-.399 3-.405c1.02.006 2.04.138 3 .405c2.28-1.552 3.285-1.23 3.285-1.23c.645 1.653.24 2.873.12 3.176c.765.84 1.23 1.91 1.23 3.22c0 4.61-2.805 5.625-5.475 5.92c.42.36.81 1.096.81 2.22c0 1.606-.015 2.896-.015 3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></div></div></a><ul class="rp-hover-group rp-hover-group--hidden rp-hover-group--right"></ul></div></div><button aria-label="mobile hamburger" class="rp-nav-hamburger rp-nav-hamburger__sm"><svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="none" viewBox="0 0 21 21"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.667" d="M3.645 5.225h13.333M3.645 10.225h13.333M3.645 15.225h13.333"></path></svg></button><button aria-label="mobile hamburger" class="rp-nav-hamburger rp-nav-hamburger__md"><svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="none" viewBox="0 0 21 21"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.667" d="M3.645 5.225h13.333M3.645 10.225h13.333M3.645 15.225h13.333"></path></svg><ul class="rp-hover-group rp-hover-group--hidden rp-hover-group--right"><div class="rp-nav-menu__others-mobile__container"><div class="rp-nav-hamburger__md__hover-group"><div class="rp-nav-screen-appearance"><div class="rp-nav-screen-appearance__left">主题</div><div class="rp-nav-screen-appearance__right"></div></div><div class="rp-nav-screen-divider"></div><div class="rp-social-links"><a href="https://github.com/shellylalala/pc_learning_basic" target="_blank" rel="noopener noreferrer" class="rp-social-links__item"><div class="rp-social-links__icon"><div class="rp-social-links__icon"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12c0 5.303 3.438 9.8 8.205 11.385c.6.113.82-.258.82-.577c0-.285-.01-1.04-.015-2.04c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729c1.205.084 1.838 1.236 1.838 1.236c1.07 1.835 2.809 1.305 3.495.998c.108-.776.417-1.305.76-1.605c-2.665-.3-5.466-1.332-5.466-5.93c0-1.31.465-2.38 1.235-3.22c-.135-.303-.54-1.523.105-3.176c0 0 1.005-.322 3.3 1.23c.96-.267 1.98-.399 3-.405c1.02.006 2.04.138 3 .405c2.28-1.552 3.285-1.23 3.285-1.23c.645 1.653.24 2.873.12 3.176c.765.84 1.23 1.91 1.23 3.22c0 4.61-2.805 5.625-5.475 5.92c.42.36.81 1.096.81 2.22c0 1.606-.015 2.896-.015 3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></div></div></a><ul class="rp-hover-group rp-hover-group--hidden rp-hover-group--right"></ul></div></div></div></ul></button></div></header><div class="rp-doc-layout__menu"><div class="rp-sidebar-menu"><button type="button" class="rp-sidebar-menu__left"><svg width="1em" height="1em" viewBox="0 0 32 32"><path fill="currentColor" d="M4 6h24v2H4zm0 18h24v2H4zm0-12h24v2H4zm0 6h24v2H4z"></path></svg><span>菜单</span></button><button type="button" class="rp-sidebar-menu__right"><span class="rp-sidebar-menu__right__text">目录</span><svg width="14" height="14" class="rp-progress-circle"><circle cx="7" cy="7" r="6" stroke-linecap="round" fill="none" stroke="var(--rp-c-divider-light)" stroke-width="2"></circle><circle cx="7" cy="7" r="6" stroke-linecap="round" fill="none" stroke="var(--rp-c-brand)" stroke-width="2" stroke-dasharray="37.69911184307752" stroke-dashoffset="37.69911184307752" transform="rotate(-90 7 7)" style="transition:stroke-dashoffset 0.3s"></circle></svg><svg width="1em" height="1em" viewBox="0 0 32 32" class="rp-sidebar-menu__right__icon" style="transform:rotate(0deg);transition:transform 0.2s ease-out"><path fill="currentColor" d="M22 16 12 26l-1.4-1.4 8.6-8.6-8.6-8.6L12 6z"></path></svg></button></div></div><div class="rp-doc-layout__container"><aside class="rp-doc-layout__sidebar rp-scrollbar"><div class="rp-sidebar-section-header"><div class="rp-sidebar-section-header__left"><span>开始阅读</span></div><div class="rp-sidebar-section-header__right"></div></div><a href="/pc_learning_basic/computer-science/start/introduction.html" class="rp-sidebar-item rp-link" style="padding-left:12px" data-depth="0"><div class="rp-sidebar-item__left"><span class="rp-doc">计算机基础 · 介绍</span></div><div class="rp-sidebar-item__right"></div></a><div class="rp-sidebar-section-header"><div class="rp-sidebar-section-header__left"><span>设计模式</span></div><div class="rp-sidebar-section-header__right"></div></div><a href="/pc_learning_basic/computer-science/design-patterns/introduction.html" class="rp-sidebar-item rp-sidebar-item--active rp-link" style="padding-left:12px" data-depth="0"><div class="rp-sidebar-item__left"><span class="rp-doc">设计模式 · 介绍</span></div><div class="rp-sidebar-item__right"></div></a><a href="/pc_learning_basic/computer-science/design-patterns/1_observer-pattern.html" class="rp-sidebar-item rp-link" style="padding-left:12px" data-depth="0"><div class="rp-sidebar-item__left"><span class="rp-doc">观察者模式</span></div><div class="rp-sidebar-item__right"></div></a><a href="/pc_learning_basic/computer-science/design-patterns/2_strategy-pattern.html" class="rp-sidebar-item rp-link" style="padding-left:12px" data-depth="0"><div class="rp-sidebar-item__left"><span class="rp-doc">策略模式</span></div><div class="rp-sidebar-item__right"></div></a></aside><div class="rp-doc-layout__doc"><main class="rp-doc-layout__doc-container"><div class="rp-doc rspress-doc"><!--$--><h1 class="rp-toc-include" id="设计模式--介绍"><a href="#设计模式--介绍" class="rp-header-anchor rp-link" aria-hidden="true">#</a>设计模式 · 介绍<!-- --> </h1>
+<blockquote>
+<p>设计模式对前端的价值，不在于背出 23 种名字，而在于你能在 React 组件协作、状态流转、接口封装和复杂业务抽象里少走很多弯路。</p>
+</blockquote>
+<h2 class="rp-toc-include" id="一句话概况"><a href="#一句话概况" class="rp-header-anchor rp-link" aria-hidden="true">#</a>一句话概况</h2>
+<p>React 开发者学设计模式，核心不是学“经典名词”，而是建立一套处理组件协作、状态变化、行为扩展和接口隔离的稳定方法。</p>
+<h2 class="rp-toc-include" id="这一章讲什么"><a href="#这一章讲什么" class="rp-header-anchor rp-link" aria-hidden="true">#</a>这一章讲什么</h2>
+<p>很多教程讲设计模式，喜欢从 Java 里的类图和继承层次开始，但前端尤其是 React 开发者，真正先遇到的问题往往不是“对象怎么创建”，而是组件为什么越来越难拆、状态为什么越来越乱、相似页面为什么越写越多、一个需求改动为什么会牵一大片逻辑。</p>
+<p>所以这一章不会按《GoF 设计模式》的目录顺序来讲，而是按 React 开发里最常遇到的问题来组织。你会先看到那些在组件通信、状态订阅、渲染分支、请求封装、Hook 抽象里高频出现的模式，再去理解它们背后的通用思想。这样学的好处是，你学完可以立刻映射到业务代码，而不是停留在“我知道这个模式的定义，但不会用”。</p>
+<p>从技术栈位置上看，设计模式处在“语法会了，但工程复杂度开始上来”的那个阶段。它承接的是 JavaScript、TypeScript、React 基础，往上连接的是组件架构、状态管理、业务抽象、设计系统和工程化能力。很多人会误以为模式是“高级知识”，其实真正线上项目离不开它，因为项目一旦进入多人协作和中长期维护，代码问题通常不是功能写不出来，而是结构很快失控。</p>
+<p>对 React 开发者来说，最值得优先理解的是四类问题：组件之间怎么协作，状态怎么稳定流转，不同业务分支怎么优雅替换，外部系统怎么被封装进统一接口。观察者、策略、状态、适配器、外观、组合这些模式，几乎都在解决这四类问题。相反，访问者、解释器、享元这类模式不是没价值，而是更偏编辑器、低代码、编译工具链和性能极限场景，普通业务阶段没必要过早投入太多精力。</p>
+<h2 class="rp-toc-include" id="内容规划"><a href="#内容规划" class="rp-header-anchor rp-link" aria-hidden="true">#</a>内容规划</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>模块</th><th>内容概述</th><th>为什么先学</th><th>React / 前端里的典型场景</th><th>难度</th></tr></thead><tbody><tr><td>必须掌握：观察者模式</td><td>理解订阅、通知、依赖变更怎么传播</td><td>这是状态管理和组件响应更新的基础</td><td>Context、Redux、Zustand、事件监听、全局通知</td><td>⭐⭐</td></tr><tr><td>必须掌握：策略模式</td><td>把可替换行为从大量条件分支里拆出来</td><td>业务分支一多，最先失控的就是 if/else</td><td>表单校验、列表排序、渲染策略、请求重试策略</td><td>⭐⭐</td></tr><tr><td>必须掌握：状态模式</td><td>用明确状态驱动 UI 和行为，而不是靠零散布尔值拼凑</td><td>React 页面复杂后，最常见的问题就是状态边界混乱</td><td>loading/success/error、审批流、弹窗流转、按钮禁用逻辑</td><td>⭐⭐⭐</td></tr><tr><td>必须掌握：装饰器 / 代理 / 外观</td><td>理解增强、拦截、封装入口三种常见抽象方式</td><td>这是 Hook 封装、API client、权限控制的高频手法</td><td>HOC、请求拦截器、埋点包装、统一业务 SDK</td><td>⭐⭐⭐</td></tr><tr><td>必须掌握：适配器 / 组合 / 工厂</td><td>解决接口不一致、树状结构组织、按类型生成对象</td><td>组件系统和页面配置化离不开它们</td><td>表单 schema、动态组件、菜单树、路由树、低代码渲染</td><td>⭐⭐⭐</td></tr><tr><td>值得掌握：命令 / 责任链 / 模板方法</td><td>解决动作编排、流程串联、固定流程抽象</td><td>当业务进入复杂交互和中后台流程时很常见</td><td>撤销重做、快捷键系统、校验链、提交流程模板</td><td>⭐⭐⭐</td></tr><tr><td>进阶理解：建造者 / 中介者 / 桥接 / 抽象工厂 / 原型</td><td>处理复杂配置、组件联动、维度解耦、对象族创建</td><td>它们更偏复杂系统设计，不是日常 CRUD 第一优先级</td><td>图表配置、主题系统、平台适配、组件族生成</td><td>⭐⭐⭐⭐</td></tr><tr><td>知道即可：访问者 / 解释器 / 享元</td><td>面向 AST、DSL、规则引擎、性能复用等特殊场景</td><td>知道适用问题就够了，没场景硬学收益很低</td><td>Babel 插件、低代码规则、虚拟列表、图形编辑器</td><td>⭐⭐⭐⭐</td></tr></tbody></table></div>
+<h2 class="rp-toc-include" id="学习建议"><a href="#学习建议" class="rp-header-anchor rp-link" aria-hidden="true">#</a>学习建议</h2>
+<ul>
+<li>不要按“23 种模式”背诵，先按 React 里的真实问题学：组件通信先看观察者，渲染分支先看策略，状态流转先看状态模式，接口封装先看适配器和外观。</li>
+<li>初期不要沉迷类图和 UML。你更应该做的是把自己项目里一个难维护的页面拿出来，反过来问：这里是不是 if/else 太多、状态太散、接口耦合太重，然后再对应模式去重构。</li>
+<li>学模式时一定要和 Hook、组件、状态管理一起看。对前端来说，模式不是单独一门课，它本来就寄生在 useState、useReducer、自定义 Hook、API 层、组件树这些日常代码里。</li>
+<li>单例、装饰器这类模式在前端很容易被滥用。看到“全局唯一”和“包一层就能增强”时先停一下，判断它是不是会带来全局污染、调试困难和职责不清，而不是因为能用就到处用。</li>
+<li>访问者、解释器、享元这类模式现阶段知道边界就够了。除非你开始做编辑器、低代码、规则引擎、编译工具链，否则没必要在普通 React 业务阶段花大量时间深挖。</li>
+</ul><!--/$--></div><footer class="rp-doc-footer"><div class="rp-doc-footer__edit"><a href="https://github.com/shellylalala/pc_learning_basic/tree/master/docs/computer-science/design-patterns/introduction.md" target="_blank" rel="noopener noreferrer" class="rp-edit-link rp-link">编辑此页面</a><div class="rp-last-updated"><p>最后更新于<!-- -->: <span>2026/5/28 09:32:00</span></p></div></div><div class="rp-doc-footer__divider"></div><div class="rp-prev-next-page"><a href="/pc_learning_basic/computer-science/start/introduction.html" class="rp-prev-next-page__item rp-prev-next-page__prev rp-link"><span class="rp-prev-next-page__item__desc">上一页</span><span class="rp-prev-next-page__item__title"><svg width="1em" height="1em" viewBox="0 0 32 32" class="rp-prev-next-page__icon rp-prev-next-page__rotate_180"><path fill="currentColor" d="M22 16 12 26l-1.4-1.4 8.6-8.6-8.6-8.6L12 6z"></path></svg><span>计算机基础 · 介绍</span></span></a><a href="/pc_learning_basic/computer-science/design-patterns/1_observer-pattern.html" class="rp-prev-next-page__item rp-prev-next-page__next rp-link"><span class="rp-prev-next-page__item__desc">下一页</span><span class="rp-prev-next-page__item__title"><span>观察者模式</span><svg width="1em" height="1em" viewBox="0 0 32 32" class="rp-prev-next-page__icon"><path fill="currentColor" d="M22 16 12 26l-1.4-1.4 8.6-8.6-8.6-8.6L12 6z"></path></svg></span></a></div></footer></main></div><aside class="rp-doc-layout__outline rp-scrollbar"><div class="rp-outline"><div class="rp-outline__title">目录<svg width="14" height="14" class="rp-progress-circle"><circle cx="7" cy="7" r="6" stroke-linecap="round" fill="none" stroke="var(--rp-c-divider-light)" stroke-width="2"></circle><circle cx="7" cy="7" r="6" stroke-linecap="round" fill="none" stroke="var(--rp-c-brand)" stroke-width="2" stroke-dasharray="37.69911184307752" stroke-dashoffset="37.69911184307752" transform="rotate(-90 7 7)" style="transition:stroke-dashoffset 0.3s"></circle></svg></div><nav class="rp-outline__toc rp-scrollbar"><a href="#一句话概况" class="rp-toc-item rp-link" title="一句话概况" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">一句话概况</span></a><a href="#这一章讲什么" class="rp-toc-item rp-link" title="这一章讲什么" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">这一章讲什么</span></a><a href="#内容规划" class="rp-toc-item rp-link" title="内容规划" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">内容规划</span></a><a href="#学习建议" class="rp-toc-item rp-link" title="学习建议" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">学习建议</span></a></nav><div class="rp-outline__divider"></div><div class="rp-outline__bottom"><a href="https://github.com/shellylalala/pc_learning_basic/tree/master/docs/computer-science/design-patterns/introduction.md" target="_blank" rel="noopener noreferrer" class="rp-outline__action-row rp-edit-link rp-link"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"></path></svg><span>编辑此页面</span></a></div></div></aside></div></div>
+    <div id="__rspress_modal_container"></div>
+  </body>
+</html>
