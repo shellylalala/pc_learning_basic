@@ -1,0 +1,11 @@
+export interface PublishInput {
+  title: string;
+  contentLength: number;
+  hasCover: boolean;
+  role: UserRole;
+}
+
+export interface Publisher {
+  name: string;
+  publish: (input: PublishInput) => Promise<PublishResult>;
+}

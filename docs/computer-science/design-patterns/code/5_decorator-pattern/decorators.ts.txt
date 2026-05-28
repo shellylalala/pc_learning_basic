@@ -1,0 +1,13 @@
+export function withValidation(publisher: Publisher, pushLog: PushLog): Publisher {
+  return {
+    ...publisher,
+    name: `${publisher.name} + Validation`,
+    async publish(input) {
+      if (input.title.trim().length < 6) {
+        throw new Error("标题至少需要 6 个字");
+      }
+
+      return publisher.publish(input);
+    },
+  };
+}

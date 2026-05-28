@@ -1,0 +1,255 @@
+import { Tabs, Tab } from "@rspress/core/theme";
+import { StatePatternDemo } from "../../../theme/components/StatePatternDemo";
+
+# 状态模式
+
+> 面向 React + TypeScript 初中级开发者：状态模式最核心的价值，不是把状态名字列出来，而是把“页面现在处于什么阶段、这个阶段允许做什么”从一堆零散布尔值里解救出来。
+
+<StatePatternDemo />
+
+## 1. 设计模式概念
+
+状态模式解决的是“同一个对象在不同状态下，行为不同，而且状态会发生流转”的问题。
+
+一句话理解：**不要用一堆散乱的条件去猜当前该做什么，而是明确声明‘现在处于哪个状态’，再由状态决定行为和 UI。**
+
+它的核心思想是把“状态”和“行为”绑定起来。页面如果在 `idle`、`submitting`、`success`、`error` 四种状态下，本来就应该表现不同：按钮文案不同、可点击性不同、提示信息不同、允许触发的动作也不同。
+
+状态模式解决的本质问题是：**避免把状态流转逻辑埋进大量布尔值和 if else 里，让状态边界清晰可推导。**
+
+## 2. 为什么前端需要它
+
+React 项目里最常见的腐化方式之一，就是状态越加越多，但没人再说得清页面“现在到底处于什么状态”。
+
+比如一个异步提交流程：
+
+- 初始状态可以编辑表单
+- 点击提交后进入加载中
+- 成功后展示成功提示并允许重置
+- 失败后展示错误信息并允许重试
+
+很多项目一开始会这样写：
+
+- `isLoading`
+- `isSuccess`
+- `hasError`
+- `isDisabled`
+- `hasSubmitted`
+
+这些变量单独看都像合理的，但组合起来就会变得混乱。你很快会遇到这种问题：
+
+- `isLoading` 和 `isSuccess` 能不能同时为 `true`？
+- 失败后是否允许再次提交？
+- 成功后按钮还该不该禁用？
+- UI 是根据哪个布尔值来决定当前提示文案？
+
+React 是状态驱动 UI，但如果状态本身组织混乱，UI 就会跟着混乱。状态模式的价值就在这里：它要求你先定义“允许存在的状态集合”，再定义“状态之间如何流转”。这样组件渲染就不再是猜谜游戏。
+
+## 3. 真实业务场景
+
+| 场景         | 为什么适合状态模式                                                                            |
+| ------------ | --------------------------------------------------------------------------------------------- |
+| 表单提交流程 | `idle / validating / submitting / success / error` 各阶段行为明显不同，不适合靠多个布尔值拼。 |
+| 审批流页面   | 草稿、待审核、已通过、已驳回、已归档，每种状态对应不同按钮和权限。                            |
+| 支付流程     | 待支付、支付中、支付成功、支付失败、已取消，不同状态会控制页面跳转和重试能力。                |
+| 文件上传     | 等待上传、上传中、暂停、成功、失败，每种状态下允许的操作完全不同。                            |
+| 多步骤引导页 | 未开始、进行中、已完成、中断恢复，不同阶段需要不同 UI 和副作用。                              |
+
+这些场景共同说明一件事：**问题不只是“值变了”，而是“阶段变了，阶段会改变允许行为”。**
+
+## 4. 错误示范（非常重要）
+
+先看一个没有状态模式的提交流程组件：
+
+```tsx
+function SubmitPanel() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [message, setMessage] = useState("");
+
+  async function handleSubmit() {
+    if (isLoading) {
+      return;
+    }
+
+    setIsLoading(true);
+    setHasError(false);
+    setMessage("提交中...");
+
+    try {
+      await fakeRequest();
+      setIsSuccess(true);
+      setMessage("提交成功");
+    } catch {
+      setHasError(true);
+      setMessage("提交失败");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const buttonText = isLoading
+    ? "提交中..."
+    : isSuccess
+      ? "再次提交"
+      : hasError
+        ? "重试"
+        : "提交";
+
+  return <button onClick={handleSubmit}>{buttonText}</button>;
+}
+```
+
+这段代码的问题不是不能跑，而是状态边界模糊：
+
+- `isSuccess` 和 `hasError` 理论上不该共存，但代码没有从模型上阻止它
+- UI 文案依赖一串三元表达式，越写越难维护
+- 如果以后加 `validating`、`expired`、`cancelled`，组件会快速膨胀
+- 按钮是否禁用、提示如何显示、是否允许重试，全都散落在不同判断里
+
+这就是典型的“状态散了，行为也散了”。
+
+## 5. 使用设计模式重构
+
+这次 demo 使用真实前端场景：**一个异步发布面板的状态流转**。
+
+重构后的设计是：
+
+- 用 `PublishStatus` 明确定义状态集合
+- 用 `statusConfigs` 把每个状态对应的 UI 和允许动作集中起来
+- 用 reducer 管理状态流转，而不是让组件自己拼布尔值
+- React 组件只负责 dispatch 事件和渲染当前状态配置
+
+<Tabs>
+
+<Tab label="types.ts">
+
+```ts
+export type PublishStatus =
+  | "idle"
+  | "validating"
+  | "submitting"
+  | "success"
+  | "error";
+
+export interface PublishState {
+  status: PublishStatus;
+  title: string;
+  message: string;
+}
+```
+
+</Tab>
+
+<Tab label="stateMachine.ts">
+
+```ts
+export const statusConfigs: Record<PublishStatus, StatusConfig> = {
+  idle: {
+    label: "待提交",
+    buttonText: "开始发布",
+    canSubmit: true,
+  },
+};
+```
+
+</Tab>
+
+<Tab label="StatePatternDemo.tsx">
+
+```tsx
+const config = statusConfigs[state.status];
+
+<button disabled={!config.canSubmit} onClick={handleSubmit}>
+  {config.buttonText}
+</button>;
+```
+
+</Tab>
+
+</Tabs>
+
+这里最重要的变化是：组件不再靠多个布尔值推断当前阶段，而是直接读取一个明确状态，再由状态决定 UI。
+
+完整源码已经放在本章的 `code/3_state-pattern` 目录中，页面顶部 demo 使用的是同一套状态机思路。
+
+## 6. 流程图 / 数据流（非常重要）
+
+```text
+用户输入标题
+↓
+点击“开始发布”
+↓
+dispatch({ type: "startValidation" })
+↓
+状态变为 validating
+↓
+验证通过后进入 submitting
+↓
+异步请求成功 -> success
+异步请求失败 -> error
+↓
+UI 根据当前状态配置重新渲染
+```
+
+```text
+StatePatternDemo
+	↓ dispatch action
+publishReducer
+	↓ 产出新状态
+statusConfigs[state.status]
+	↓ 提供按钮文案 / 提示 / 禁用规则
+表单区 / 状态卡片 / 时间线
+```
+
+这个数据流的关键是：**流转逻辑集中在 reducer，展示逻辑集中在状态配置，组件只负责连接它们。**
+
+## 7. 优点
+
+第一，**状态边界更清楚**。你能一眼看出系统允许哪些状态存在，而不是靠猜测多个布尔值组合。
+
+第二，**行为更稳定**。按钮是否能点、提示文案是什么、是否允许重试，都由当前状态统一决定，不会散落在组件各处。
+
+第三，**扩展更自然**。以后新增 `cancelled`、`archived`、`reviewing` 这样的状态，只需要补充状态定义和配置，不必重写整棵组件树。
+
+第四，**更适合测试**。你可以直接测试 reducer：某个 action 触发后状态是否按预期流转，而不是只测 UI 表面现象。
+
+第五，**更符合 React 的心智模型**。React 本来就是状态驱动 UI，状态模式只是把“状态”这件事组织得更严格、更可推导。
+
+## 8. 缺点
+
+状态模式也有成本。
+
+如果页面只有 `open / close` 两种状态，而且没有复杂行为差异，直接用一个布尔值就够了。为了两个状态强行引入 reducer 和配置表，反而会增加复杂度。
+
+另外，状态一多之后，需要注意两个问题：
+
+- 状态名字必须足够准确，否则只是把混乱从布尔值挪到了命名上
+- 状态流转要有边界，否则 reducer 里仍然可能堆满条件判断
+
+所以状态模式更适合**阶段明显、行为依赖状态、状态会持续增长**的场景，而不是所有 useState 都要改成状态机。
+
+## 9. React / 常见库中的体现（重点）
+
+React 开发里，状态模式其实非常常见，只是很多人没意识到自己在用。
+
+最典型的是异步请求：`idle / loading / success / error`。如果你把它拆成多个布尔值，代码通常会越来越乱；如果你明确成一个状态枚举，UI 会稳定很多。
+
+Redux 的 reducer 非常适合表达状态流转。很多复杂页面里，action 代表事件，reducer 代表“收到事件后如何进入下一个状态”，这本质上就是状态模式的工程化实现。
+
+Zustand 虽然更轻，但很多团队也会在 store 里维护显式状态枚举，用 selector 读取当前阶段，让不同组件根据状态决定表现。
+
+React Query 常见的 `status`、`fetchStatus` 也是状态模式思想的体现。它没有让你自己维护一堆布尔值，而是直接告诉你当前处于哪个请求阶段。
+
+在表单库、上传组件、播放器、编辑器里，状态模式几乎无处不在，因为这些系统都不是“值变化”这么简单，而是“阶段变化 + 行为变化”。
+
+从 Fiber 和调度角度看，React 负责的是“如何更新 UI”，不会替你建模“哪些业务阶段是合法的”。状态模式解决的是业务建模问题，React 调度解决的是渲染执行问题，这两者正好互补。
+
+## 10. 总结
+
+状态模式最核心的一句话是：**不要用零散条件去猜系统现在能做什么，而要先定义系统正处于什么状态，再让状态决定行为。**
+
+真正应该学会的，不是背出 `State` 这个名字，而是当你看到页面里开始出现越来越多 `isLoading`、`isSuccess`、`hasError`、`isDisabled` 时，能意识到问题可能已经不是“状态不够多”，而是“状态模型已经混乱”。
+
+对 React 开发者来说，状态模式最大的意义，就是让 UI 真正建立在清晰的状态流转之上，而不是建立在一堆难以维护的条件拼接之上。

@@ -1,0 +1,15 @@
+export async function initializeDashboard(role: UserRole): Promise<DashboardSnapshot> {
+  const profile = await fetchProfile(role);
+  const permissions = await fetchPermissions(role);
+  const featureFlags = await fetchFeatureFlags(role);
+  const unreadCount = await fetchUnreadCount(role);
+
+  return {
+    userName: profile.name,
+    role,
+    permissions,
+    featureFlags,
+    unreadCount,
+    notice: `控制台初始化完成，已聚合 ${permissions.length} 项权限与 ${featureFlags.length} 个开关。`,
+  };
+}

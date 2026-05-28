@@ -1,0 +1,1 @@
+export { FacadePatternDemo } from "./FacadePatternDemo";

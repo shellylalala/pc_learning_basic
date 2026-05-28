@@ -1,0 +1,18 @@
+import type { AccessLog, ReportData, UserRole } from "./types";
+
+class ReportServiceProxy {
+  async getWeeklyReport(role: UserRole, forceRefresh = false): Promise<ReportData> {
+    if (role === "guest") {
+      throw new Error("访客没有查看报表的权限");
+    }
+
+    if (!forceRefresh && this.cache.has(role)) {
+      return {
+        ...this.cache.get(role)!,
+        fromCache: true,
+      };
+    }
+
+    return this.realService.getWeeklyReport(role);
+  }
+}
